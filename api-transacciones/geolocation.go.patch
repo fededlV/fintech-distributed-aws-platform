@@ -1,0 +1,37 @@
+--- api-transacciones/geolocation.go
++++ api-transacciones/geolocation.go
+@@ -9,9 +9,9 @@
+ )
+ 
+ type geoResponse struct {
+-	CountryName string `json:"country_name"`
+-	Error       bool   `json:"error"`
+-	Reason      string `json:"reason"`
++	Country string `json:"country"`
++	Success bool   `json:"success"`
++	Message string `json:"message"`
+ }
+ 
+ // obtenerPais consulta una API PUBLICA externa (ipapi.co, sin API key) para enriquecer la
+@@ -21,7 +21,7 @@
+ // transaccion se guarda igual, sin el pais.
+ func obtenerPais(ip string) string {
+ 	client := http.Client{Timeout: 5 * time.Second}
+-	url := fmt.Sprintf("https://ipapi.co/%s/json/", ip)
++	url := fmt.Sprintf("https://ipwho.is/%s", ip)
+ 
+ 	resp, err := client.Get(url)
+ 	if err != nil {
+@@ -35,9 +35,9 @@
+ 		fmt.Println("Respuesta invalida de la API externa de geolocalizacion:", err)
+ 		return ""
+ 	}
+-	if data.Error {
+-		fmt.Println("La API externa de geolocalizacion devolvio un error:", data.Reason)
++	if !data.Success && data.Message != "" {
++		fmt.Println("La API externa de geolocalizacion devolvio un error:", data.Message)
+ 		return ""
+ 	}
+-	return data.CountryName
++	return data.Country
+ }

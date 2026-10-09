@@ -1,0 +1,15 @@
+*
+
+!db/
+!db/init-scripts/
+!db/init-scripts/**
+
+db/.env
+db/.env.*
+db/data/
+db/*.key
+db/*.crt
+db/*.pem
+db/*.csr
+db/*.pfx
+db/*.p12

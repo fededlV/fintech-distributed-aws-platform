@@ -1,0 +1,14 @@
+*
+
+!api-tarjetas/
+!api-tarjetas/**
+
+api-tarjetas/bin/
+api-tarjetas/obj/
+api-tarjetas/.env
+api-tarjetas/.env.*
+api-tarjetas/*.user
+api-tarjetas/*.suo
+api-tarjetas/.vs/
+api-tarjetas/.vscode/
+api-tarjetas/.idea/

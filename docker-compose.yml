@@ -1,0 +1,111 @@
+services:
+
+  db:
+    image: franlopezmora/db:1.0.0
+    env_file: envs/db.env
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - tp-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512m
+
+  api-clientes:
+    image: fededlv/api-clientes:1.0.0
+    env_file: envs/api-clientes.env
+    networks:
+      - tp-network
+    depends_on:
+      - db
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256m
+
+  api-pagos:
+    image: fededlv/api-pagos:1.0.0
+    env_file: envs/api-pagos.env
+    networks:
+      - tp-network
+    depends_on:
+      - db
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256m
+
+  api-facturas:
+    image: maxiescgit/api-facturas:1.0.0
+    env_file: envs/api-facturas.env
+    networks:
+      - tp-network
+    depends_on:
+      - db
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512m
+
+  api-transacciones:
+    image: maxiescgit/api-transacciones:1.0.1
+    env_file: envs/api-transacciones.env
+    networks:
+      - tp-network
+    depends_on:
+      - db
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128m
+
+  api-tarjetas:
+    image: franlopezmora/api-tarjetas:1.0.0
+    env_file: envs/api-tarjetas.env
+    networks:
+      - tp-network
+    depends_on:
+      - db
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256m
+
+  web:
+    image: maxiescgit/web:1.0.1
+    ports:
+      - "443:443"
+    networks:
+      - tp-network
+    depends_on:
+      - api-clientes
+      - api-pagos
+      - api-facturas
+      - api-transacciones
+      - api-tarjetas
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128m
+
+networks:
+  tp-network:
+    driver: bridge
+
+volumes:
+  db-data:

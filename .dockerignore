@@ -1,0 +1,25 @@
+# Archivos y carpetas de configuración / secretos
+envs/
+*.env
+.env.*
+!.env.example
+
+# Certificados y claves
+*.pem
+*.key
+*.crt
+
+# Git y metadatos
+.git/
+.gitignore
+.dockerignore
+README.md
+capturas/
+
+# Dependencias locales y compilados residuales
+**/node_modules/
+**/venv/
+**/__pycache__/
+**/bin/
+**/obj/
+**/target/

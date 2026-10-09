@@ -1,0 +1,7 @@
+node_moules/
+npm-debug.log
+.env
+env.example
+.git
+.gitignore
+README.md

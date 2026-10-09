@@ -1,0 +1,11 @@
+venv/
+.env
+.env.*
+__pycache__/
+*.pyc
+.git
+.gitignore
+.pytest_cache/
+*.pem
+*.crt
+*.key

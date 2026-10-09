@@ -1,0 +1,73 @@
+# ==========================================
+# Secretos y Entornos (Requerido por la consigna)
+# ==========================================
+*.env
+.env.*
+.env
+!.env.example
+
+
+# ==========================================
+# Certificados y Claves TLS (Requerido por la consigna)
+# ==========================================
+*.key
+*.crt
+*.pem
+*.csr
+*.pfx
+*.p12
+
+# ==========================================
+# api-clientes (Python / Flask)
+# ==========================================
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ==========================================
+# api-pagos / web (Node.js / Vite)
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+.dist/
+
+# ==========================================
+# api-facturas (Java / Spring Boot / Maven)
+# ==========================================
+target/
+*.jar
+*.war
+.mvn/wrapper/maven-wrapper.jar
+
+# ==========================================
+# api-transacciones (Go)
+# ==========================================
+api-transacciones/bin/
+api-transacciones/transacciones
+
+# ==========================================
+# api-tarjetas (.NET / C#)
+# ==========================================
+bin/
+obj/
+*.user
+*.suo
+
+# ==========================================
+# Base de datos (MariaDB)
+# ==========================================
+db/data/
+
+# ==========================================
+# IDEs y Sistema Operativo
+# ==========================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,13 @@
+.env
+.env.*
+data/
+
+*.key
+*.crt
+*.pem
+*.csr
+*.pfx
+*.p12
+
+Dockerfile
+Dockerfile.dockerignore
