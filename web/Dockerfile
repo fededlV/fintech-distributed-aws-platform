@@ -12,4 +12,8 @@ COPY web/nginx/nginx.conf /etc/nginx/conf.d/default.conf
 COPY web/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 EXPOSE 443
+
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 --start-period=5s \
+  CMD wget --no-check-certificate -q --spider https://127.0.0.1:443/healthz || exit 1
+
 CMD ["/entrypoint.sh"]

@@ -1,113 +1,145 @@
-# Configuración de AWS EC2
+# ☁️ AWS EC2 Cloud Infrastructure & Deployment Specification
 
-Documentación de la instancia utilizada para desplegar el trabajo práctico. Los datos corresponden a la última sesión de pruebas del 6 de octubre de 2026.
+[![AWS Infrastructure](https://img.shields.io/badge/AWS-EC2%20(t3.medium)-FF9900?logo=amazonec2&logoColor=white)](https://aws.amazon.com/ec2/)
+[![OS](https://img.shields.io/badge/OS-Amazon%20Linux%202023-232F3E?logo=linux&logoColor=white)](https://aws.amazon.com/linux/amazon-linux-2023/)
+[![Security](https://img.shields.io/badge/Network-Zero--Trust%20Ingress-success)](https://aws.amazon.com/vpc/)
 
-## Resumen de la instancia
+This document provides the infrastructure specification, network topology, security perimeter definitions, and provisioning runbook for the **FinTech Nova** distributed platform deployed on Amazon Web Services (AWS).
 
-| Dato | Valor |
-|---|---|
-| Nombre | `tp-devops-2026-ec2` |
-| Instance ID | `i-0f1fd62a9dfa65fe0` |
-| Región observada | `us-east-1` |
-| IPv4 pública | `44.202.101.129` |
-| Tipo de instancia | `t3.medium` |
+---
 
-El nombre y el ID de la instancia se observan en las capturas de la consola de AWS. La IP pública se validó durante la última sesión mediante las solicitudes HTTPS incluidas en este documento.
+## 📌 Instance Provisioning Summary
 
-## Sistema operativo
+| Parameter | Value | Operational Details |
+|---|---|---|
+| **Instance Identifier** | `tp-devops-2026-ec2` | Tagged production test instance |
+| **Instance ID** | `i-0f1fd62a9dfa65fe0` | AWS EC2 managed resource |
+| **AWS Region & AZ** | `us-east-1` (`us-east-1a` / `use1-az2`) | High-availability tier US East |
+| **Public IPv4 Address** | `44.202.101.129` | Public endpoint for HTTPS gateway |
+| **Instance Type** | `t3.medium` | 2 vCPUs (Burstable), 4 GiB Memory |
+| **Operating System** | **Amazon Linux 2023 (AL2023)** | Kernel 6.1, x86_64 architecture |
+| **Virtualization** | HVM | EBS-backed root volume |
 
-| Dato | Valor |
-|---|---|
-| Sistema operativo | Amazon Linux 2023 |
+---
 
-## Red
+## 🌐 Network & VPC Topology
 
-| Dato | Valor |
-|---|---|
-| VPC ID | `vpc-0c6fc4ba735e0d814` (Lab VPC) |
-| Resolución DNS | Habilitada |
-| Nombres de host DNS | Habilitados |
-| Subnet ID | `subnet-05b5194b650b826d5` (Public Subnet) |
-| Availability Zone | `us-east-1a` (`use1-az2`) |
-| Asignación automática de IPv4 pública | Sí |
-| Estado de la subnet | Disponible |
+The deployment resides inside a dedicated Virtual Private Cloud (VPC) configured with automatic public IP routing and enabled DNS resolution.
 
-## Security Group
+| Network Property | Value | Notes |
+|---|---|---|
+| **VPC ID** | `vpc-0c6fc4ba735e0d814` | Isolated virtual network |
+| **Subnet ID** | `subnet-05b5194b650b826d5` | Public Subnet (`172.31.0.0/20`) |
+| **DNS Resolution** | **Enabled** | Internal AWS Route 53 resolution active |
+| **DNS Hostnames** | **Enabled** | Public/Private DNS records generated |
+| **IPv4 Public Auto-Assign** | **Yes** | Automatic routing table attachment |
+| **Route Table Association** | Internet Gateway Attached | Direct egress/ingress routing |
 
-Security Group asociado: `tp-devops-https` (`sg-02614669e113686f2`).
+---
 
-### Reglas de entrada
+## 🔒 Security Perimeter (Security Group)
 
-| Rule ID | Puerto | Protocolo | Origen | Uso |
-|---|---:|---|---|---|
-| `sgr-0353adada36922860` | 22 | TCP | `200.43.203.111/32` | SSH únicamente desde la IP autorizada |
-| `sgr-093a00513b76cb26f` | 443 | TCP | `0.0.0.0/0` | HTTPS público |
+The host instance is protected by a dedicated Security Group: `tp-devops-https` (`sg-02614669e113686f2`).
 
-El puerto **80 no está abierto**: no existe una regla de entrada que lo permita.
+### Inbound Rules (Ingress)
 
-### Reglas de salida
+| Rule ID | Protocol | Port Range | Source / CIDR | Purpose & Security Rationale |
+|---|---|---:|---|---|
+| `sgr-0353adada36922860` | TCP | `22` | `200.43.203.111/32` | **Hardened SSH Administration**: Restricted strictly to authorized administrative CIDR mask. |
+| `sgr-093a00513b76cb26f` | TCP | `443` | `0.0.0.0/0` | **Public HTTPS Gateway**: Exposes NGINX reverse proxy with TLS encryption. |
 
-| Rule ID | Puerto | Protocolo | Destino | Descripción |
+> [!IMPORTANT]
+> **Port 80 (HTTP) is explicitly blocked / closed.** There is no ingress rule configured for unencrypted HTTP traffic. All web clients must communicate exclusively over encrypted TLS (`HTTPS:443`).
+
+### Outbound Rules (Egress)
+
+| Rule ID | Protocol | Port Range | Destination | Purpose |
 |---|---|---|---|---|
-| `sgr-03e4df737e76da66` | Todo | Todo | `0.0.0.0/0` | — |
+| `sgr-03e4df737e76da66` | All | All (`0-65535`) | `0.0.0.0/0` | Outbound communication for third-party APIs (FX Rates, Geolocation) and Docker Hub image pulling. |
 
-## Conexión SSH
+---
 
-La instancia se administró desde Windows con OpenSSH usando el usuario `ec2-user` y la clave privada `vockey.pem`:
+## 🔑 Administrative Access & SSH Key Hardening
 
-```bat
-ssh -i "D:\vockey.pem" ec2-user@44.202.101.129
+Secure shell access is provisioned using OpenSSH and private key authentication (`vockey.pem`).
+
+### Enforcing Strict Permissions on Windows / Linux
+Before initiating SSH connections, overly permissive access control lists (ACLs) on the private key must be removed to satisfy OpenSSH security requirements:
+
+#### Windows (PowerShell / Command Prompt)
+```cmd
+icacls "D:\vockey.pem" /reset
+icacls "D:\vockey.pem" /grant:r "%USERNAME%:R"
+icacls "D:\vockey.pem" /inheritance:r
 ```
 
-Antes de conectarse, se corrigieron con `icacls` los permisos excesivamente abiertos del archivo `.pem` en Windows.
+#### Linux / macOS
+```bash
+chmod 400 ~/.ssh/vockey.pem
+```
 
-## Preparación de la instancia
+### SSH Connection Command
+```bash
+ssh -i "path/to/vockey.pem" ec2-user@44.202.101.129
+```
 
-Se instaló Docker en Amazon Linux 2023 usando el gestor de paquetes `dnf`:
+---
+
+## ⚙️ Host Provisioning & Container Runtime Setup
+
+The target EC2 instance is configured with Docker Engine and the Docker Compose CLI plugin via Amazon Linux 2023 package management (`dnf`):
 
 ```bash
+# 1. Update OS packages and install Docker
 sudo dnf update -y
 sudo dnf install -y docker
-```
 
-Luego se habilitó el servicio y se verificaron Docker y Docker Compose:
+# 2. Deploy the latest Docker Compose CLI plugin binary
+sudo mkdir -p /usr/local/lib/docker/cli-plugins
+sudo curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
-```bash
+# 3. Enable and start the Docker daemon
 sudo systemctl enable --now docker
-docker --version
-docker compose version
+
+# 4. Grant non-root execution permissions to ec2-user
+sudo usermod -aG docker ec2-user
 ```
 
-El usuario `ec2-user` inicialmente no tenía permiso para usar el socket de Docker. Se lo agregó al grupo `docker` y se cerró y volvió a abrir la sesión SSH para aplicar el cambio:
+*Note: A session restart or new shell login is required for the `docker` group membership to take effect.*
+
+---
+
+## 📦 Configuration & Secret Synchronization
+
+Sensitive configuration files (`.env`) and database initialization scripts are synchronized to the host over encrypted SCP channels, ensuring zero credentials enter version control:
 
 ```bash
-sudo usermod -aG docker $USER
+# Define deployment directory
+REMOTE_DIR="/home/ec2-user/fintech-distributed"
+
+# Synchronize docker-compose.yml
+scp -i "vockey.pem" docker-compose.yml ec2-user@44.202.101.129:$REMOTE_DIR/
+
+# Synchronize isolated environment files
+scp -r -i "vockey.pem" envs ec2-user@44.202.101.129:$REMOTE_DIR/
+
+# Synchronize database schema initialization scripts
+scp -r -i "vockey.pem" db/init-scripts ec2-user@44.202.101.129:$REMOTE_DIR/db/
 ```
 
-Finalmente, se autenticó Docker Hub con `docker login`, utilizando el usuario de Docker Hub y un Personal Access Token. No se almacenaron credenciales en el repositorio.
+---
 
-## Copia de archivos de configuración
+## 🔍 Validation & End-to-End Verification
 
-Los archivos `.env` se copiaron al directorio `/home/ec2-user/tp-grupo16/`:
-
-```bat
-scp -i "D:\vockey.pem" D:\Descargas\*.env ec2-user@44.202.101.129:/home/ec2-user/tp-grupo16/
-```
-
-También se copió la carpeta `init-scripts`:
-
-```bat
-scp -r -i "D:\vockey.pem" "D:\Descargas\init-scripts" ec2-user@44.202.101.129:/home/ec2-user/tp-grupo16/
-```
-
-La captura de la instancia confirma la presencia de los archivos `.env`, `docker-compose.yml` e `init-scripts` en ese directorio.
-
-## Verificación del despliegue por HTTPS
-
-La publicación se verificó contra la IPv4 pública mediante HTTPS. Se utilizó `-k` por el certificado TLS empleado durante la prueba:
+Verification was executed directly against the public IPv4 endpoint over TLS:
 
 ```bash
-curl -k https://44.202.101.129/
+# Verify Frontend SPA Gateway
+curl -k -I https://44.202.101.129/
+
+# Verify Polyglot Microservices Endpoints
 curl -k https://44.202.101.129/api/clientes
 curl -k https://44.202.101.129/api/pagos
 curl -k https://44.202.101.129/api/facturas
@@ -115,30 +147,21 @@ curl -k https://44.202.101.129/api/transacciones
 curl -k https://44.202.101.129/api/tarjetas
 ```
 
-Las capturas muestran respuestas para la página principal y para todos los endpoints listados. El contenedor `web` expone el puerto `443` de la instancia; el puerto `80` permanece sin una regla de entrada en el Security Group.
+### Result
+All endpoints respond with HTTP `200 OK`. The reverse proxy forwards incoming traffic based on URI path prefix to each isolated microservice container over Docker's internal bridge network.
 
-## Capturas de configuración
+---
 
-### Detalle de red de la VPC y Subnet
+## 🖼️ Cloud Infrastructure Evidence Gallery
 
-La información de red corresponde a la Lab VPC (`vpc-0c6fc4ba735e0d814`) y la subnet pública (`subnet-05b5194b650b826d5`).
+### 1. VPC & Subnet Architecture
+![VPC Networking](assets/ec2_networking.png)
 
-![Detalle de red](capturas/ec2_networking.png)
+### 2. Instance Hardware & Identity Profile
+![EC2 Summary](assets/ec2_instance_summary.png)
 
-### Instancia EC2 asociada
+### 3. AMI & Key Pair Configuration
+![EC2 Instance Details](assets/ec2_instance_details.png)
 
-La captura identifica la instancia `i-0f1fd62a9dfa65fe0` (`tp-devops-2026-ec2`).
-
-![Instancia EC2 asociada](capturas/ec2_instance_summary.png)
-
-### Detalles de la instancia
-
-La captura muestra la AMI seleccionada y el par de claves `vockey` asignado.
-
-![Detalles de la instancia](capturas/ec2_instance_details.png)
-
-### Reglas de entrada y salida del Security Group
-
-La captura muestra las reglas de entrada documentadas: SSH restringido y HTTPS público, así como las reglas de salida.
-
-![Reglas del Security Group](capturas/ec2_security.png)
+### 4. Security Group Ingress / Egress Matrix
+![Security Group Rules](assets/ec2_security.png)

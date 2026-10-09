@@ -1,80 +1,81 @@
 #!/usr/bin/env bash
 set -e
 
-# 1. Validación de parámetros.
+# 1. Parameter validation.
 if [ "$#" -lt 2 ]; then
-    echo "Uso: $0 <IP_EC2> <RUTA_KEY_PEM>"
-    echo "Ejemplo: $0 50.16.48.137 ~/.ssh/grupo16.pem"
+    echo "Usage: $0 <EC2_IP> <PEM_KEY_PATH>"
+    echo "Example: $0 50.16.48.137 ~/.ssh/key.pem"
     exit 1
 fi
 
 EC2_IP=$1
 KEY_PATH=$2
 REMOTE_USER="ec2-user"
-REMOTE_DIR="~/tp-grupo16"
+REMOTE_DIR="~/fintech-distributed"
 
-# Opciones de SSH para evitar frenos por confirmaciones
+# SSH options to avoid blocking on confirmation prompts
 SSH_OPTS="-i $KEY_PATH -o StrictHostKeyChecking=no"
 
-echo "=== Iniciando Deploy en EC2 ($EC2_IP) ==="
+echo "=== Starting deployment on EC2 ($EC2_IP) ==="
 
-# 2. Provisionamiento de la instancia.
-echo "--> Configurando Docker en Amazon Linux 2023..."
+# 2. Instance provisioning.
+echo "--> Configuring Docker on Amazon Linux 2023..."
 ssh $SSH_OPTS $REMOTE_USER@$EC2_IP bash << 'EOF'
     set -e
     
     if ! command -v docker &> /dev/null; then
-        echo "Instalando Docker..."
+        echo "Installing Docker..."
         sudo dnf update -y
         sudo dnf install -y docker
         
-        echo "Instalando Docker Compose..."
-        # AL2023 a veces no trae el plugin de compose en dnf, la forma más segura es bajar el binario oficial de GitHub:
+        echo "Installing Docker Compose..."
+        # AL2023 sometimes does not include the compose plugin in dnf; the safest approach is to download the official binary from GitHub:
         sudo mkdir -p /usr/local/lib/docker/cli-plugins
         sudo curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" -o /usr/local/lib/docker/cli-plugins/docker-compose
         sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
         
-        echo "Iniciando servicio de Docker..."
+        echo "Starting the Docker service..."
         sudo systemctl enable --now docker
         
-        echo "Dando permisos al usuario ec2-user..."
+        echo "Granting permissions to the ec2-user user..."
         sudo usermod -aG docker ec2-user
     fi
 EOF
 
-# 3. Copiar archivos al servidor remoto (EC2).
-echo "--> Copiando archivos de entorno y docker-compose..."
-# Se crea la carpeta base en la EC2
+# 3. Copy files to the remote server (EC2).
+echo "--> Copying environment files and docker-compose..."
+# Create the base folder on the EC2 instance
 ssh $SSH_OPTS $REMOTE_USER@$EC2_IP "mkdir -p $REMOTE_DIR/db"
 
-# Se copia el docker-compose
+# Copy the docker-compose file
 scp $SSH_OPTS docker-compose.yml $REMOTE_USER@$EC2_IP:$REMOTE_DIR/
 
-# Copiamos la carpeta ENVS completa 
-# Con -r se copia todo el contenido de la carpeta de una sola vez
+# Copy the full ENVS folder
+# With -r, all contents are copied in one step
 scp -r $SSH_OPTS envs $REMOTE_USER@$EC2_IP:$REMOTE_DIR/
 
-# Copiamos los scripts de la base de datos
+# Copy the database scripts
 scp -r $SSH_OPTS db/init-scripts $REMOTE_USER@$EC2_IP:$REMOTE_DIR/db/
 
-# 4. Despliegue de contenedores en la instancia EC2.
-echo "--> Pulleando imágenes y levantando el stack con Docker Compose..."
+# 4. Deploy containers on the EC2 instance.
+echo "--> Pulling images and starting the stack with Docker Compose..."
 ssh $SSH_OPTS $REMOTE_USER@$EC2_IP bash << EOF
     set -e
     cd $REMOTE_DIR
 
-    # Baja las 6 imágenes desde los distintos Docker Hubs
+    # Pull the 6 images from the different Docker Hub repositories
     sudo docker compose pull
 
-    # Levanta el stack completo en segundo plano (detached)
+    # Start the full stack in the background (detached)
     sudo docker compose up -d
 EOF
 
-# 5. Smoke Tests (Pruebas de funcionamiento)
-echo "--> Verificando estado de los servicios (Smoke Tests)..."
-echo "Esperando 20 segundos para que levante MariaDB y las APIs..."
+# 5. Smoke tests (functionality checks)
+echo "--> Checking service status (Smoke Tests)..."
+echo "Waiting 20 seconds for MariaDB and the APIs to start..."
 sleep 20
 ENDPOINTS=(
+    "https://$EC2_IP/healthz"
     "https://$EC2_IP/"
     "https://$EC2_IP/api/clientes"
     "https://$EC2_IP/api/pagos"
@@ -84,12 +85,12 @@ ENDPOINTS=(
 )
 
 TODOS_OK=true
-MAX_INTENTOS=12 # 12 intentos de 5 segundos = 60 segundos
+MAX_ATTEMPTS=12 # 12 attempts of 5 seconds each = 60 seconds
 
 for URL in "${ENDPOINTS[@]}"; do
-    echo -n "Probando $URL ... "
+    echo -n "Testing $URL ... "
     
-    for ((i=1; i<=MAX_INTENTOS; i++)); do
+    for ((i=1; i<=MAX_ATTEMPTS; i++)); do
         STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" "$URL" || echo "Error")
         
         if [ "$STATUS" == "200" ]; then
@@ -97,22 +98,22 @@ for URL in "${ENDPOINTS[@]}"; do
             break
         fi
         
-        # Si no es el último intento, espera y vuelve a probar
-        if [ "$i" -lt "$MAX_INTENTOS" ]; then
+        # If it is not the last attempt, wait and try again
+        if [ "$i" -lt "$MAX_ATTEMPTS" ]; then
             sleep 5
         fi
     done
-    # Si salió del bucle y el estado sigue sin ser 200, entonces falló definitivamente
+    # If the loop exits and the status is still not 200, it failed definitively
     if [ "$STATUS" != "200" ]; then
-        echo "[FALLO] (Último estado: $STATUS)"
+        echo "[FAILED] (Last status: $STATUS)"
         TODOS_OK=false
     fi
 done
 if [ "$TODOS_OK" = true ]; then
     echo "================================================="
-    echo "¡Despliegue finalizado con éxito! Todo funcionando."
+    echo "Deployment completed successfully! Everything is working."
     echo "================================================="
 else
-    echo "Atención: Algún servicio no levantó a tiempo."
+    echo "Warning: One or more services did not start in time."
     exit 1
 fi

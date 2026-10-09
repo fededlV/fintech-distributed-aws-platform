@@ -14,7 +14,7 @@ envs/
 .gitignore
 .dockerignore
 README.md
-capturas/
+assets/
 
 # Dependencias locales y compilados residuales
 **/node_modules/

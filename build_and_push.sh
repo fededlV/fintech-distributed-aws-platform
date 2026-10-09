@@ -1,59 +1,59 @@
 #!/usr/bin/env bash
-set -e #Directiva de seguridad para que el script se detenga si ocurre un error.
+set -e # Security directive to stop the script if an error occurs.
 
-# 1. Validación de parámetros.
+# 1. Parameter validation.
 if [ -z "$1" ]; then
-    echo "Uso: $0 <USUARIO_DOCKER_HUB>"
-    echo "Ejemplo: $0 fededlv"
+    echo "Usage: $0 <DOCKER_HUB_USER>"
+    echo "Example: $0 fededlv"
     exit 1
 fi
 
 DOCKER_USER=$1
 
-echo "=== Iniciando Build y Push para el usuario $DOCKER_USER ==="
+echo "=== Starting build and push for user $DOCKER_USER ==="
 
-#2. Build de imágenes.
-echo "--> Construyendo imagen api-clientes..."
-docker build -t "$DOCKER_USER/api-clientes:1.0.0" api-clientes/
+# 2. Image build.
+echo "--> Building api-clients image..."
+docker build -t "$DOCKER_USER/api-clients:1.0.0" api-clients/
 
-echo "--> Construyendo imagen api-facturas..."
-docker build -t "$DOCKER_USER/api-facturas:1.0.0" -f api-facturas/Dockerfile . 
+echo "--> Building api-invoices image..."
+docker build -t "$DOCKER_USER/api-invoices:1.0.0" -f api-invoices/Dockerfile .
 
-echo "--> Construyendo imagen api-pagos..."
-docker build -t "$DOCKER_USER/api-pagos:1.0.0" api-pagos/
+echo "--> Building api-payments image..."
+docker build -t "$DOCKER_USER/api-payments:1.0.0" api-payments/
 
-echo "--> Construyendo imagen api-tarjetas..."
-docker build -t "$DOCKER_USER/api-tarjetas:1.0.0" -f api-tarjetas/Dockerfile .
+echo "--> Building api-cards image..."
+docker build -t "$DOCKER_USER/api-cards:1.0.0" -f api-cards/Dockerfile .
 
-echo "--> Construyendo imagen api-transacciones..."
-docker build -t "$DOCKER_USER/api-transacciones:1.0.1" -f api-transacciones/Dockerfile .
+echo "--> Building api-transactions image..."
+docker build -t "$DOCKER_USER/api-transactions:1.0.0" -f api-transactions/Dockerfile .
 
-echo "--> Construyendo imagen db..."
+echo "--> Building db image..."
 docker build -t "$DOCKER_USER/db:1.0.0" -f db/Dockerfile . 
 
-echo "--> Construyendo imagen web..."
-docker build -t "$DOCKER_USER/web:1.0.1" -f web/Dockerfile .
+echo "--> Building web image..."
+docker build -t "$DOCKER_USER/web:1.0.0" -f web/Dockerfile .
 
-#3. Push de imágenes a Docker Hub..
-echo "--> Subiendo api-clientes a Docker Hub..."
-docker push "$DOCKER_USER/api-clientes:1.0.0"
+# 3. Push images to Docker Hub.
+echo "--> Pushing api-clients to Docker Hub..."
+docker push "$DOCKER_USER/api-clients:1.0.0"
 
-echo "--> Subiendo api-facturas a Docker Hub..."
-docker push "$DOCKER_USER/api-facturas:1.0.0"
+echo "--> Pushing api-invoices to Docker Hub..."
+docker push "$DOCKER_USER/api-invoices:1.0.0"
 
-echo "--> Subiendo api-pagos a Docker Hub..."
-docker push "$DOCKER_USER/api-pagos:1.0.0"
+echo "--> Pushing api-payments to Docker Hub..."
+docker push "$DOCKER_USER/api-payments:1.0.0"
 
-echo "--> Subiendo api-tarjetas a Docker Hub..."
-docker push "$DOCKER_USER/api-tarjetas:1.0.0"
+echo "--> Pushing api-cards to Docker Hub..."
+docker push "$DOCKER_USER/api-cards:1.0.0"
 
-echo "--> Subiendo api-transacciones a Docker Hub..."
-docker push "$DOCKER_USER/api-transacciones:1.0.1"
+echo "--> Pushing api-transactions to Docker Hub..."
+docker push "$DOCKER_USER/api-transactions:1.0.0"
 
-echo "--> Subiendo db a Docker Hub..."
+echo "--> Pushing db to Docker Hub..."
 docker push "$DOCKER_USER/db:1.0.0"
 
-echo "--> Subiendo web a Docker Hub..."
-docker push "$DOCKER_USER/web:1.0.1"
+echo "--> Pushing web to Docker Hub..."
+docker push "$DOCKER_USER/web:1.0.0"
 
-echo "=== Build y Push finalizados ==="
+echo "=== Build and push completed ==="

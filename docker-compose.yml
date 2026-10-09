@@ -1,12 +1,18 @@
 services:
 
   db:
-    image: franlopezmora/db:1.0.0
+    image: fededlv/db:1.0.0
     env_file: envs/db.env
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 --silent || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
     volumes:
       - db-data:/var/lib/mysql
     networks:
-      - tp-network
+      - fintech-network
     restart: always
     deploy:
       resources:
@@ -14,13 +20,22 @@ services:
           cpus: "0.5"
           memory: 512m
 
-  api-clientes:
-    image: fededlv/api-clientes:1.0.0
-    env_file: envs/api-clientes.env
+  api-clients:
+    image: fededlv/api-clients:1.0.0
+    env_file: envs/api-clients.env
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health/live')\" || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
     networks:
-      - tp-network
+      fintech-network:
+        aliases:
+          - api-clients
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: always
     deploy:
       resources:
@@ -28,13 +43,22 @@ services:
           cpus: "0.25"
           memory: 256m
 
-  api-pagos:
-    image: fededlv/api-pagos:1.0.0
-    env_file: envs/api-pagos.env
+  api-payments:
+    image: fededlv/api-payments:1.0.0
+    env_file: envs/api-payments.env
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:8080/health/live', (r) => process.exit(r.statusCode === 200 ? 0 : 1))\" || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
     networks:
-      - tp-network
+      fintech-network:
+        aliases:
+          - api-payments
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: always
     deploy:
       resources:
@@ -42,13 +66,22 @@ services:
           cpus: "0.25"
           memory: 256m
 
-  api-facturas:
-    image: maxiescgit/api-facturas:1.0.0
-    env_file: envs/api-facturas.env
+  api-invoices:
+    image: fededlv/api-invoices:1.0.0
+    env_file: envs/api-invoices.env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/live || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 45s
     networks:
-      - tp-network
+      fintech-network:
+        aliases:
+          - api-invoices
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: always
     deploy:
       resources:
@@ -56,13 +89,22 @@ services:
           cpus: "0.5"
           memory: 512m
 
-  api-transacciones:
-    image: maxiescgit/api-transacciones:1.0.1
-    env_file: envs/api-transacciones.env
+  api-transactions:
+    image: fededlv/api-transactions:1.0.0
+    env_file: envs/api-transactions.env
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/health/live || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
     networks:
-      - tp-network
+      fintech-network:
+        aliases:
+          - api-transactions
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: always
     deploy:
       resources:
@@ -70,13 +112,22 @@ services:
           cpus: "0.25"
           memory: 128m
 
-  api-tarjetas:
-    image: franlopezmora/api-tarjetas:1.0.0
-    env_file: envs/api-tarjetas.env
+  api-cards:
+    image: fededlv/api-cards:1.0.0
+    env_file: envs/api-cards.env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/live || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
     networks:
-      - tp-network
+      fintech-network:
+        aliases:
+          - api-cards
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: always
     deploy:
       resources:
@@ -85,17 +136,28 @@ services:
           memory: 256m
 
   web:
-    image: maxiescgit/web:1.0.1
+    image: fededlv/web:1.0.0
     ports:
       - "443:443"
     networks:
-      - tp-network
+      - fintech-network
     depends_on:
-      - api-clientes
-      - api-pagos
-      - api-facturas
-      - api-transacciones
-      - api-tarjetas
+      api-clients:
+        condition: service_healthy
+      api-payments:
+        condition: service_healthy
+      api-invoices:
+        condition: service_healthy
+      api-transactions:
+        condition: service_healthy
+      api-cards:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-check-certificate -q --spider https://localhost:443/healthz || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
     restart: always
     deploy:
       resources:
@@ -104,7 +166,7 @@ services:
           memory: 128m
 
 networks:
-  tp-network:
+  fintech-network:
     driver: bridge
 
 volumes:

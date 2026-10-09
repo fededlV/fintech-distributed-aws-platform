@@ -4,7 +4,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Containers%20%26%20Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![NGINX](https://img.shields.io/badge/NGINX-Reverse%20Proxy%20%26%20TLS-009639?logo=nginx&logoColor=white)](https://nginx.org/)
 [![MariaDB](https://img.shields.io/badge/MariaDB-Multi--Database%20Engine-003545?logo=mariadb&logoColor=white)](https://mariadb.org/)
-[![Security](https://img.shields.io/badge/Security-Non--Root%20%7C%20Zero--Trust-success)](api-clientes/SEGURIDAD.md)
+[![Security](https://img.shields.io/badge/Security-Non--Root%20%7C%20Zero--Trust-success)](api-clients/SECURITY.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > **A production-ready, distributed financial microservices platform** deployed on **AWS EC2**, featuring a **polyglot architecture** across 5 independent backend runtimes, a single-page frontend application, automated multi-stage container optimization, zero-trust infrastructure security, resilient third-party integrations, and automated provisioning with end-to-end smoke testing.
@@ -91,11 +91,11 @@ flowchart TD
 
             NGINX["⚡ NGINX Gateway & Reverse Proxy<br/>(Vite React Frontend + Dynamic TLS Engine)"]:::proxy
 
-            NGINX -->|"/api/clientes"| API_Clients["🐍 api-clientes<br/>Python Flask (Port 8080)"]:::service
-            NGINX -->|"/api/pagos"| API_Payments["🟢 api-pagos<br/>Node.js Express (Port 3000)"]:::service
-            NGINX -->|"/api/facturas"| API_Invoices["☕ api-facturas<br/>Java Spring Boot (Port 8080)"]:::service
-            NGINX -->|"/api/transacciones"| API_Trans["🔷 api-transacciones<br/>Go / Gin (Port 8080)"]:::service
-            NGINX -->|"/api/tarjetas"| API_Cards["🟣 api-tarjetas<br/>.NET 8 Minimal API (Port 5000)"]:::service
+            NGINX -->|"/api/clients"| API_Clients["🐍 api-clients<br/>Python Flask (Port 8080)"]:::service
+            NGINX -->|"/api/payments"| API_Payments["🟢 api-payments<br/>Node.js Express (Port 3000)"]:::service
+            NGINX -->|"/api/invoices"| API_Invoices["☕ api-invoices<br/>Java Spring Boot (Port 8080)"]:::service
+            NGINX -->|"/api/transactions"| API_Trans["🔷 api-transactions<br/>Go / Gin (Port 8080)"]:::service
+            NGINX -->|"/api/cards"| API_Cards["🟣 api-cards<br/>.NET 8 Minimal API (Port 5000)"]:::service
 
             API_Clients --> MariaDB
             API_Payments --> MariaDB
@@ -120,11 +120,11 @@ Each service was architected to leverage the ecosystem strengths of its target t
 | Microservice | Technology & Runtime | Container Architecture | Responsibility & Domain | Registry Image |
 |---|---|---|---|---|
 | **`web`** | Vite + React + NGINX (Alpine) | Multi-stage (`node:20-alpine` ➔ `nginx:alpine`) | Single Page Application (SPA), routing gateway, TLS termination | [`maxiescgit/web:1.0.1`](https://hub.docker.com/r/maxiescgit/web) |
-| **`api-clientes`** | Python 3.11 / Flask | Multi-stage (`python:3.11-slim`), non-root `appuser` | Customer management, identity profiles, contact registry | [`fededlv/api-clientes:1.0.0`](https://hub.docker.com/repository/docker/fededlv/api-clientes/general) |
-| **`api-pagos`** | Node.js 20 / Express | Lightweight Debian-slim runtime | Payment processing, external FX conversion, transaction auditing | [`fededlv/api-pagos:1.0.0`](https://hub.docker.com/repository/docker/fededlv/api-pagos/general) |
-| **`api-facturas`** | Java 17 / Spring Boot | Multi-stage Maven build ➔ Lightweight JRE | Invoice generation, tax calculation, billing records | [`maxiescgit/api-facturas:1.0.0`](https://hub.docker.com/r/maxiescgit/api-facturas) |
-| **`api-transacciones`** | Go 1.22 / Gin | Multi-stage Go compiler ➔ Minimal static runner | High-concurrency financial ledger, IP geolocation enrichment | [`maxiescgit/api-transacciones:1.0.1`](https://hub.docker.com/r/maxiescgit/api-transacciones) |
-| **`api-tarjetas`** | C# / .NET 8 Minimal API | Multi-stage .NET SDK ➔ ASP.NET Core Runtime | Credit/debit card lifecycle, card tokenization, limits | [`franlopezmora/api-tarjetas:1.0.0`](https://hub.docker.com/r/franlopezmora/api-tarjetas) |
+| **`api-clients`** | Python 3.11 / Flask | Multi-stage (`python:3.11-slim`), non-root `appuser` | Customer management, identity profiles, contact registry | [`fededlv/api-clientes:1.0.0`](https://hub.docker.com/repository/docker/fededlv/api-clientes/general) |
+| **`api-payments`** | Node.js 20 / Express | Lightweight Debian-slim runtime | Payment processing, external FX conversion, transaction auditing | [`fededlv/api-pagos:1.0.0`](https://hub.docker.com/repository/docker/fededlv/api-pagos/general) |
+| **`api-invoices`** | Java 17 / Spring Boot | Multi-stage Maven build ➔ Lightweight JRE | Invoice generation, tax calculation, billing records | [`maxiescgit/api-facturas:1.0.0`](https://hub.docker.com/r/maxiescgit/api-facturas) |
+| **`api-transactions`** | Go 1.22 / Gin | Multi-stage Go compiler ➔ Minimal static runner | High-concurrency financial ledger, IP geolocation enrichment | [`maxiescgit/api-transacciones:1.0.1`](https://hub.docker.com/r/maxiescgit/api-transacciones) |
+| **`api-cards`** | C# / .NET 8 Minimal API | Multi-stage .NET SDK ➔ ASP.NET Core Runtime | Credit/debit card lifecycle, card tokenization, limits | [`franlopezmora/api-tarjetas:1.0.0`](https://hub.docker.com/r/franlopezmora/api-tarjetas) |
 | **`db`** | MariaDB 11.x | Configured with `/docker-entrypoint-initdb.d` | Relational persistence across 5 isolated database schemas | [`franlopezmora/db:1.0.0`](https://hub.docker.com/r/franlopezmora/db) |
 
 ---
@@ -168,7 +168,7 @@ The platform was provisioned and validated on **AWS Cloud Infrastructure**:
 
 ### 1. Rootless Container Execution
 By default, Docker executes processes as `root`. If an attacker were to exploit a remote code execution vulnerability in an application, root privileges inside the container drastically increase the risk of container escape to the host.
-In services like `api-clientes`, we implemented custom system users:
+In services like `api-clients`, we implemented custom system users:
 ```dockerfile
 RUN adduser --disabled-password --gecos '' appuser
 WORKDIR /app
@@ -196,13 +196,13 @@ Instead, our reverse proxy uses an automated runtime `entrypoint.sh`:
 Financial systems must remain operational even when upstream dependencies suffer disruptions:
 
 ### 1. Graceful Degradation on External API Failures
-Both `api-pagos` and `api-transacciones` interact with third-party providers (exchange rates and IP-based geolocation).
+Both `api-payments` and `api-transactions` interact with third-party providers (exchange rates and IP-based geolocation).
 - **Incident Experience**: During deployment, AWS public IPs were quickly rate-limited by the primary geolocation provider (`ipapi.co`).
 - **Resilience Implementation**: Instead of throwing uncaught exceptions and aborting transaction writes, the microservices catch external timeouts and HTTP errors, gracefully defaulting the metadata (e.g., country left blank) while **successfully committing the core transaction to the database**.
 - **Provider Redundancy**: The service was refactored to consume a more resilient provider (`ipwho.is`), ensuring seamless operational continuity.
 
 ### 2. Intelligent Cold-Start Smoke Testing
-Java Spring Boot (`api-facturas`) has a longer JVM warmup and schema validation startup time than Go or Node.js.
+Java Spring Boot (`api-invoices`) has a longer JVM warmup and schema validation startup time than Go or Node.js.
 - Rather than using static timeouts that fail prematurely, [`deploy.sh`](deploy.sh) integrates an **exponential retry polling strategy** (up to 12 attempts at 5-second intervals).
 - The deployment only reports green once every microservice endpoint responds with HTTP `200 OK`.
 
@@ -282,7 +282,7 @@ Probando https://44.202.101.129/api/tarjetas ... [OK]
 <summary><b>1. Running Containers on AWS EC2</b></summary>
 <br/>
 
-![Containers status on AWS EC2](capturas/estado_contenedores_ec2.png)
+![Containers status on AWS EC2](assets/estado_contenedores_ec2.png)
 *All 7 containers operating with healthy status and bounded resource allocations.*
 </details>
 
@@ -292,7 +292,7 @@ Probando https://44.202.101.129/api/tarjetas ... [OK]
 
 | Instance Summary | Security Group Configuration |
 |---|---|
-| ![EC2 Summary](capturas/ec2_instance_summary.png) | ![EC2 Security](capturas/ec2_security.png) |
+| ![EC2 Summary](assets/ec2_instance_summary.png) | ![EC2 Security](assets/ec2_security.png) |
 
 </details>
 
@@ -302,7 +302,7 @@ Probando https://44.202.101.129/api/tarjetas ... [OK]
 
 | Script Execution | Curl Verification via HTTPS |
 |---|---|
-| ![Deploy Script](capturas/scripts1.png) | ![HTTPS Curls](capturas/curls.png) |
+| ![Deploy Script](assets/scripts1.png) | ![HTTPS Curls](assets/curls.png) |
 
 </details>
 
@@ -312,11 +312,11 @@ Probando https://44.202.101.129/api/tarjetas ... [OK]
 
 | Microservice | UI Preview |
 |---|---|
-| **Customers (`api-clientes`)** | ![Customers](capturas/serv_clientes.png) |
-| **Payments (`api-pagos`)** | ![Payments](capturas/serv_pagos.png) |
-| **Invoices (`api-facturas`)** | ![Invoices](capturas/serv_factura.png) |
-| **Cards (`api-tarjetas`)** | ![Cards](capturas/serv_tarjetas.png) |
-| **Transactions (`api-transacciones`)** | ![Transactions](capturas/serv_transacciones.png) |
+| **Customers (`api-clients`)** | ![Customers](assets/serv_clientes.png) |
+| **Payments (`api-payments`)** | ![Payments](assets/serv_pagos.png) |
+| **Invoices (`api-invoices`)** | ![Invoices](assets/serv_factura.png) |
+| **Cards (`api-cards`)** | ![Cards](assets/serv_tarjetas.png) |
+| **Transactions (`api-transactions`)** | ![Transactions](assets/serv_transacciones.png) |
 
 </details>
 
@@ -326,7 +326,7 @@ Probando https://44.202.101.129/api/tarjetas ... [OK]
 
 | Registries Part 1 | Registries Part 2 |
 |---|---|
-| ![Images 1](capturas/img_pagos_clientes.png) | ![Images 2](capturas/img_web_transacciones.png) |
+| ![Images 1](assets/img_pagos_clientes.png) | ![Images 2](assets/img_web_transacciones.png) |
 
 </details>
 
