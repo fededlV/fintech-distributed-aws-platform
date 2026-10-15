@@ -350,9 +350,7 @@ To transition this platform to enterprise-scale production, the following enhanc
 *Cloud & DevOps Engineer | Software Developer*  
 - **GitHub**: [@fededlv](https://github.com/fededlv)  
 - **Docker Hub**: [fededlv](https://hub.docker.com/u/fededlv)  
-- **LinkedIn**: [linkedin.com/in/federicodelavega](https://www.linkedin.com) *(Update with your direct LinkedIn profile handle)*
-
-*Academic collaboration and co-authorship for initial modular components: Máximo Escobar, Francisco López Mora, Francisco Alfonso.*
+- **LinkedIn**: [linkedin.com/in/federicodelavega]([https://www.linkedin.com](https://www.linkedin.com/in/federico-de-la-vega/))
 
 ---
 
